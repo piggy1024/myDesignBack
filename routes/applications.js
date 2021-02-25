@@ -1,51 +1,8 @@
 var express = require('express');
-var mongoose = require('mongoose');
 var router = express.Router();
 var ejs = require('ejs');
 var Status = require('./applicationStatusSchema');
-
-
-// 建立数据库连接
-mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}, (err) => {
-    if (err) {
-        console.log(err);
-        return;
-    }
-    console.log("数据库连接成功");
-
-});
-
-//  定义一个schema  对象的字段应该与数据库表一一对应
-var ApplicationSchema = mongoose.Schema({
-    app_theme: String, // 主题
-    stu_id: String, // 申请人工号或者学号
-    app_name: String, // 申请人名称
-    app_phone: String, // 申请人电话
-    app_type: String, // 申请活动类型
-    app_roomType: { // 申请教室类型
-        type: Boolean,
-        default: false
-    },
-    applicant: String, // 申请单位
-    app_size: String, // 申请教室大小
-    app_start_time: Date, // 申请开始使用时间
-    app_end_time: Date, // 申请结束使用时间
-    app_content: String, // 活动内容
-    app_passTime: String, // 申请通过时间
-    status: { // 通过状态
-        type: Boolean,
-        default: false
-    },
-    c_id: String, // 教室id
-    reason: String // 审批理由
-})
-
-// 定义数据库模型 来操作数据库
-var Application = mongoose.model('Application', ApplicationSchema);
-
+var Application = require('./applicationSchema');
 
 router.get('/', function (req, res, next) {
     ejs.renderFile('../views/index.ejs', {}, (err, data) => {
@@ -54,13 +11,10 @@ router.get('/', function (req, res, next) {
         });
         res.end(data)
     })
-    // res.send('respond with a resource! Application');
 });
 
 
 // 根据学生id查询申请进度列表
-
-
 router.get('/applyProcess', function (req, res, next) {
     Application.find({
         "stu_id": req.query.user_id
@@ -76,10 +30,11 @@ router.get('/applyProcess', function (req, res, next) {
     })
 
 });
+
 // 未审批列表
 router.get('/auditList', function (req, res, next) {
     Application.find({
-        "status": false
+        "status": 0
     }, async (err, doc) => {
         if (err) {
             console.log(err);
@@ -91,20 +46,57 @@ router.get('/auditList', function (req, res, next) {
         });
     })
 
+    //子表关联主表查询，populate里面为子表外键
+    // Status.find({
+    //     logistics_reason: '后勤处意见'
+    // }).populate('app_id').exec(function (err, docs) {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+    //     console.log(docs[0].app_id.stu_id);
+    //     res.send({
+    //         code: 20000,
+    //         data: docs
+    //     });
+    // })
+
+    // Application.aggregate([{
+    //     $match: {
+    //         "stu_id": '17251106123'
+    //     }
+    // }, {
+    //     $lookup: {
+    //         from: 'applications_status',
+    //         localField: '_id',
+    //         foreignField: 'app_id',
+    //         as: 'itemCollect'
+    //     }
+    // }], (err, doc) => {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+    //     res.send({
+    //         code: 20000,
+    //         data: doc
+    //     });
+    // })
+
 });
 
 // 已审批列表
 router.get('/auditedList', function (req, res, next) {
-    Application.find({
-        "status": true
-    }, async (err, doc) => {
+
+    // 0是未审批  1是审批通过  2是审批驳回
+    Application.$where('this.status !== 0').exec((err, docs) => {
         if (err) {
             console.log(err);
             return;
         }
         res.send({
             code: 20000,
-            data: doc
+            data: docs
         });
     })
 
@@ -143,7 +135,7 @@ router.post('/resolveApply', function (req, res, next) {
     }, {
         "reason": req.query.reason,
         "app_passTime": req.query.app_passTime,
-        "status": "true"
+        "status": 1
     }, (err, response) => {
         if (err) {
             console.log(err);
@@ -166,7 +158,7 @@ router.post('/rejectApply', function (req, res, next) {
     }, {
         "reason": req.query.reason,
         "app_passTime": req.query.app_passTime,
-        "status": "true"
+        "status": 2
     }, (err, response) => {
         if (err) {
             console.log(err);
@@ -188,7 +180,7 @@ router.post('/withdrawApply', function (req, res, next) {
         "_id": req.query._id
     }, {
         "reason": req.query.reason,
-        "status": "false"
+        "status": 0
     }, (err, response) => {
         if (err) {
             console.log(err);

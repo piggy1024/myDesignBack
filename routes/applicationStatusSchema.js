@@ -1,4 +1,6 @@
 var mongoose = require('mongoose');
+var Application = require('./applicationSchema');
+var application = Application;
 // 建立数据库连接
 mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
     useNewUrlParser: true,
@@ -14,7 +16,10 @@ mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
 
 //  定义一个schema  对象的字段应该与数据库表一一对应
 var statusSchema = mongoose.Schema({
-    app_id: String,
+    app_id: {
+        type: String,
+        ref: Application // ref后的application代表的是主表application的Model。
+    },
     department_status: {
         type: String,
         default: '0'
