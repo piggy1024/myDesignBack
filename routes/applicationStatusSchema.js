@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');
 var Application = require('./applicationSchema');
-var application = Application;
 // 建立数据库连接
 mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
     useNewUrlParser: true,
@@ -49,6 +48,10 @@ var statusSchema = mongoose.Schema({
         default: '0'
     },
     technology_center_reason: {
+        type: String,
+        default: ''
+    },
+    stu_status_id: {
         type: String,
         default: ''
     }
