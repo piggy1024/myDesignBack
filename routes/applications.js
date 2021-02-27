@@ -129,6 +129,37 @@ router.post('/add', function (req, res, next) {
     })
 })
 
+// 取消申请
+router.post('/deleteApply', function (req, res, next) {
+    // 取消一个申请要分别删除申请表和状态表的文档
+    Application.deleteOne({
+            '_id': req.query._id
+        }, //查找条件
+        /*回调函数*/
+        (err, docs) => {
+            if (err) {
+                return console.log('删除数据失败')
+            }
+            console.log(docs);
+        }
+    )
+    Status.deleteOne({
+            'app_id': req.query._id
+        }, //查找条件
+        /*回调函数*/
+        (err, docs) => {
+            if (err) {
+                return console.log('删除数据失败')
+            }
+            console.log(docs);
+        }
+    )
+    res.send({
+        code: 20000,
+        msg: '取消成功!'
+    })
+})
+
 // 审批通过
 router.post('/resolveApply', function (req, res, next) {
     console.log("resolveApply" + res.query);
