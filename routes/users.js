@@ -9,6 +9,8 @@ var identity = []
 var name = ''
 // 用户id
 var user_id = ''
+// 用户部门
+var apartment = ''
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -46,6 +48,8 @@ router.post('/login', function (req, res, next) {
 
       // 保存管理者名称
       name = docs[0].admin_name
+      // 保存管理者部门
+      apartment = docs[0].apartment
 
       res.send(content);
     })
@@ -98,7 +102,7 @@ router.post('/login', function (req, res, next) {
 
 
 router.get('/info', function (req, res, next) {
-  console.log(req.query.token);
+  // console.log(req.query.token);
   // req.query是请求带过来的参数
   // req 是前端返回的token  state.token   也是login后端返回的data.token  可以拿来做判断决定返回roles的类型
   let info = {
@@ -108,7 +112,8 @@ router.get('/info', function (req, res, next) {
     introduction: 'I am a super administrator',
     avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
     name: name,
-    user_id: user_id
+    user_id: user_id,
+    apartment: apartment
   }
   let content = {
     code: 20000,

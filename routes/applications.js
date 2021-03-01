@@ -31,7 +31,7 @@ router.get('/applyProcess', function (req, res, next) {
 
     //子表关联主表查询，populate里面为子表外键
     Status.find({
-        stu_status_id: '17251106123'
+        stu_status_id: req.query.user_id
     }).populate('app_id').exec(function (err, docs) {
         if (err) {
             console.log(err);
@@ -47,18 +47,73 @@ router.get('/applyProcess', function (req, res, next) {
 
 // 未审批列表
 router.get('/auditList', function (req, res, next) {
-    Application.find({
-        "status": 0
-    }, async (err, doc) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        res.send({
-            code: 20000,
-            data: doc
-        });
-    })
+    // 根据不同部门的人筛选出不同部门未审批的申请
+    if (req.query.apartment === "部门") {
+        Status.find({
+            department_status: "0"
+        }).populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "后勤处") {
+        Status.find({
+            logistics_status: "0"
+        }).populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "教务处") {
+        Status.find({
+            school_dean_status: "0"
+        }).populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "教育技术中心") {
+        Status.find({
+            technology_center_status: "0"
+        }).populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    }
+
+    // Application.find({
+    //     "status": 0
+    // }, async (err, doc) => {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+    //     res.send({
+    //         code: 20000,
+    //         data: doc
+    //     });
+    // })
 
 
 
@@ -89,17 +144,65 @@ router.get('/auditList', function (req, res, next) {
 // 已审批列表
 router.get('/auditedList', function (req, res, next) {
 
-    // 0是未审批  1是审批通过  2是审批驳回
-    Application.$where('this.status !== 0').exec((err, docs) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        res.send({
-            code: 20000,
-            data: docs
-        });
-    })
+    // 0 是未审批 1 是审批通过 2 是审批驳回
+    // Application.$where('this.status !== 0').exec((err, docs) => {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+    //     res.send({
+    //         code: 20000,
+    //         data: docs
+    //     });
+    // })
+
+
+    // 根据不同部门的人筛选出不同部门已审批的申请
+    if (req.query.apartment === "部门") {
+        Status.$where('this.department_status !== "0"').populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "后勤处") {
+        Status.$where('this.logistics_status !== "0"').populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "教务处") {
+        Status.$where('this.school_dean_status !== "0"').populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    } else if (req.query.apartment === "教育技术中心") {
+        Status.$where('this.technology_center_status !== "0"').populate('app_id').exec(function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: docs
+            });
+        })
+    }
 
 });
 
@@ -162,72 +265,371 @@ router.post('/deleteApply', function (req, res, next) {
 
 // 审批通过
 router.post('/resolveApply', function (req, res, next) {
-    console.log("resolveApply" + res.query);
-    Application.updateOne({
-        "_id": req.query._id
-    }, {
-        "reason": req.query.reason,
-        "app_passTime": req.query.app_passTime,
-        "status": 1
-    }, (err, response) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        console.log(response);
-        res.send({
-            code: 20000,
-            data: {
-                msg: '编辑修改成功!'
+    // 部门审批 教务处审批 后勤处审批 教育技术中心审批
+    if (req.query.apartment === '部门') {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
             }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "department_reason": req.query.reason,
+                "department_status": "1" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
         })
-    })
+    } else if (req.query.apartment === "后勤处") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "logistics_reason": req.query.reason,
+                "logistics_status": "1" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    } else if (req.query.apartment === "教务处") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "school_dean_reason": req.query.reason,
+                "school_dean_status": "1" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    } else if (req.query.apartment === "教育技术中心") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "technology_center_reason": req.query.reason,
+                "technology_center_status": "1" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    }
+
 })
 
 // 审批驳回
 router.post('/rejectApply', function (req, res, next) {
-    Application.updateOne({
-        "_id": req.query._id
-    }, {
-        "reason": req.query.reason,
-        "app_passTime": req.query.app_passTime,
-        "status": 2
-    }, (err, response) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        console.log(response);
-        res.send({
-            code: 20000,
-            data: {
-                msg: '编辑修改成功!'
+    // Application.updateOne({
+    //     "_id": req.query._id
+    // }, {
+    //     "reason": req.query.reason,
+    //     "app_passTime": req.query.app_passTime,
+    //     "status": 2
+    // }, (err, response) => {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+    //     console.log(response);
+    //     res.send({
+    //         code: 20000,
+    //         data: {
+    //             msg: '编辑修改成功!'
+    //         }
+    //     })
+    // })
+    // 部门审批 教务处审批 后勤处审批 教育技术中心审批
+    if (req.query.apartment === '部门') {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
             }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "department_reason": req.query.reason,
+                "department_status": "2" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
         })
-    })
+    } else if (req.query.apartment === "后勤处") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "logistics_reason": req.query.reason,
+                "logistics_status": "2" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    } else if (req.query.apartment === "教务处") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "school_dean_reason": req.query.reason,
+                "school_dean_status": "2" // 审批通过是"1"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    } else if (req.query.apartment === "教育技术中心") {
+        Application.updateOne({
+            "_id": req.query._id
+        }, {
+            "reason": req.query.reason,
+            "app_passTime": req.query.app_passTime,
+            "status": 1
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            Status.updateOne({
+                "app_id": req.query._id
+            }, {
+                "technology_center_reason": req.query.reason,
+                "technology_center_status": "2" // 审批驳回是"2"
+            }, (err, response) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                res.send({
+                    code: 20000,
+                    data: {
+                        msg: '编辑修改成功!'
+                    }
+                })
+            })
+
+        })
+    }
 })
 
 // 撤回审批
 router.post('/withdrawApply', function (req, res, next) {
-    Application.updateOne({
-        "_id": req.query._id
-    }, {
-        "reason": "",
-        "app_passTime": "",
-        "status": 0
-    }, (err, response) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        console.log(response);
-        res.send({
-            code: 20000,
-            data: {
-                msg: '撤回成功!'
+    // Application.updateOne({
+    //     "_id": req.query._id
+    // }, {
+    //     "app_passTime": ,
+    // }, (err, response) => {
+    //     if (err) {
+    //         console.log(err);
+    //         return;
+    //     }
+
+    // })
+
+    if (req.query.apartment === '部门') {
+        Status.updateOne({
+            "app_id": req.query._id
+        }, {
+            "department_reason": "",
+            "department_status": "0"
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
             }
+            res.send({
+                code: 20000,
+                data: {
+                    msg: '撤回成功!'
+                }
+            })
         })
-    })
+    } else if (req.query.apartment === "后勤处") {
+        Status.updateOne({
+            "app_id": req.query._id
+        }, {
+            "logistics_reason": "",
+            "logistics_status": "0"
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: {
+                    msg: '撤回成功!'
+                }
+            })
+        })
+    } else if (req.query.apartment === "教务处") {
+        Status.updateOne({
+            "app_id": req.query._id
+        }, {
+            "school_dean_reason": "",
+            "school_dean_status": "0"
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: {
+                    msg: '撤回成功!'
+                }
+            })
+        })
+    } else if (req.query.apartment === "教育技术中心") {
+        Status.updateOne({
+            "app_id": req.query._id
+        }, {
+            "technology_center_reason": "",
+            "technology_center_status": "0"
+        }, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: {
+                    msg: '撤回成功!'
+                }
+            })
+        })
+    }
 })
 
 module.exports = router;
