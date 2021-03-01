@@ -44,6 +44,7 @@ router.post('/login', function (req, res, next) {
       // 如果密码不对则改变返回的code
       if (req.body.password !== docs[0].admin_password) {
         content.code = 10000
+        content.message = '密码错误!'
       }
 
       // 保存管理者名称
