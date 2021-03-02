@@ -39,7 +39,7 @@ router.get('/applyProcess', function (req, res, next) {
         }
         res.send({
             code: 20000,
-            data: docs
+            data: docs.reverse()
         });
     })
 
@@ -58,7 +58,7 @@ router.get('/auditList', function (req, res, next) {
             }
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "后勤处") {
@@ -78,7 +78,7 @@ router.get('/auditList', function (req, res, next) {
             })
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "教务处") {
@@ -98,7 +98,7 @@ router.get('/auditList', function (req, res, next) {
             })
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "教育技术中心") {
@@ -118,7 +118,7 @@ router.get('/auditList', function (req, res, next) {
             })
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     }
@@ -187,7 +187,7 @@ router.get('/auditedList', function (req, res, next) {
             }
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "后勤处") {
@@ -198,7 +198,7 @@ router.get('/auditedList', function (req, res, next) {
             }
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "教务处") {
@@ -209,7 +209,7 @@ router.get('/auditedList', function (req, res, next) {
             }
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     } else if (req.query.apartment === "教育技术中心") {
@@ -220,7 +220,7 @@ router.get('/auditedList', function (req, res, next) {
             }
             res.send({
                 code: 20000,
-                data: docs
+                data: docs.reverse()
             });
         })
     }
@@ -293,7 +293,6 @@ router.post('/resolveApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -324,7 +323,6 @@ router.post('/resolveApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -355,7 +353,6 @@ router.post('/resolveApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -386,7 +383,7 @@ router.post('/resolveApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
+            "status": 1 // 只有最后个部门审批之后才会改application表的status状态
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -443,7 +440,7 @@ router.post('/rejectApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
+            "status": 2
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -474,7 +471,7 @@ router.post('/rejectApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
+            "status": 2
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -505,7 +502,7 @@ router.post('/rejectApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
+            "status": 2
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -536,7 +533,7 @@ router.post('/rejectApply', function (req, res, next) {
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
-            "status": 1
+            "status": 2
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -566,17 +563,20 @@ router.post('/rejectApply', function (req, res, next) {
 
 // 撤回审批
 router.post('/withdrawApply', function (req, res, next) {
-    // Application.updateOne({
-    //     "_id": req.query._id
-    // }, {
-    //     "app_passTime": ,
-    // }, (err, response) => {
-    //     if (err) {
-    //         console.log(err);
-    //         return;
-    //     }
+    // 无论哪个部门撤回审批后,审批结果都是 审批中
+    Application.updateOne({
+        "_id": req.query._id
+    }, {
+        "app_passTime": new Date(),
+        "reason": "暂时撤回审批",
+        "status": 0
+    }, (err, response) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
 
-    // })
+    })
 
     if (req.query.apartment === '部门') {
         Status.updateOne({
