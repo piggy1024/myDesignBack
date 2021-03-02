@@ -69,6 +69,13 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
+            docs.filter(item => {
+                if (item.department_status !== '0') {
+                    return false
+                }
+                return true
+
+            })
             res.send({
                 code: 20000,
                 data: docs
@@ -82,6 +89,13 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
+            docs.filter(item => {
+                if (item.logistics_status !== '0') {
+                    return false
+                }
+                return true
+
+            })
             res.send({
                 code: 20000,
                 data: docs
@@ -95,6 +109,13 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
+            docs.filter(item => {
+                if (item.school_dean_status !== '0') {
+                    return false
+                }
+                return true
+
+            })
             res.send({
                 code: 20000,
                 data: docs
