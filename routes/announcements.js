@@ -39,7 +39,12 @@ router.get('/', function (req, res, next) {
 });
 // 公告列表
 router.get('/list', function (req, res, next) {
-    Announcement.find({}, async (err, doc) => {
+    let searchForm = {}
+    // 若查询条件不为空
+    if (req.query.publisher) {
+        searchForm.publisher = req.query.publisher
+    }
+    Announcement.find(searchForm, async (err, doc) => {
         if (err) {
             console.log(err);
             return;

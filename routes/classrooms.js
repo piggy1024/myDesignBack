@@ -33,7 +33,21 @@ router.get('/', function (req, res, next) {
     res.send('respond with a resource! classrooms!');
 });
 router.get('/list', function (req, res, next) {
-    Classroom.find({}, async (err, doc) => {
+    let searchForm = {}
+    // 若查询条件不为空
+    if (req.query.classroomName) {
+        searchForm.classroomName = req.query.classroomName
+    }
+    if (req.query.building) {
+        searchForm.building = req.query.building
+    }
+    if (req.query.isMultimedia) {
+        searchForm.isMultimedia = req.query.isMultimedia
+    }
+    if (req.query.size) {
+        searchForm.size = req.query.size
+    }
+    Classroom.find(searchForm, async (err, doc) => {
         if (err) {
             console.log(err);
             return;
