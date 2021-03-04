@@ -13,7 +13,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
 
 });
 //  定义一个schema  对象的字段应该与数据库表一一对应
-var ApplicationSchema = mongoose.Schema({
+var ApplicationPostSchema = mongoose.Schema({
     // _id: {
     // type: mongoose.Schema.Types.ObjectId,
     // ref: Status
@@ -22,13 +22,8 @@ var ApplicationSchema = mongoose.Schema({
     stu_id: String, // 申请人工号或者学号
     app_name: String, // 申请人名称
     app_phone: String, // 申请人电话
-    app_type: String, // 申请活动类型
-    app_roomType: { // 申请教室类型
-        type: Boolean,
-        default: false
-    },
+    app_post_type: String, // 宣传品类型
     applicant: String, // 申请单位
-    app_size: String, // 申请教室大小
     app_start_time: Date, // 申请开始使用时间
     app_end_time: Date, // 申请结束使用时间
     app_content: String, // 活动内容
@@ -37,11 +32,10 @@ var ApplicationSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
-    c_id: String, // 教室id
     reason: String // 审批理由
 })
 
 // 定义数据库模型 来操作数据库
-var Application = mongoose.model('Application', ApplicationSchema);
+var PostApplication = mongoose.model('hang_post_application', ApplicationPostSchema);
 
-module.exports = Application;
+module.exports = PostApplication;

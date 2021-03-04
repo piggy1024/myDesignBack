@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const multer = require("multer");
 
 //  引入路由
 var indexRouter = require('./routes/index');
@@ -12,6 +13,7 @@ var applicationsRouter = require('./routes/applications');
 var announcementsRouter = require('./routes/announcements');
 var studentsRouter = require('./routes/students');
 var adminsRouter = require('./routes/admins');
+var applicationsPostRouter = require('./routes/applicationsPost');
 
 
 var app = express();
@@ -36,6 +38,18 @@ app.use('/applications', applicationsRouter);
 app.use('/announcements', announcementsRouter);
 app.use('/students', studentsRouter);
 app.use('/admins', adminsRouter);
+app.use('/applicationsPost', applicationsPostRouter);
+
+// 将服务器中的 uploads文件夹作为静态文件夹保存静态资源(图片)
+app.use('/uploads', express.static(__dirname + '/uploads'))
+const upload = multer({
+  dest: __dirname + '/uploads'
+})
+app.post('/uploads', upload.single('file'), async (req, res) => {
+  const file = req.file
+  file.url = `http://localhost:3000/uploads/${file.filename}`
+  res.send(file)
+})
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
