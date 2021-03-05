@@ -22,6 +22,7 @@ var ApplicationPostSchema = mongoose.Schema({
     stu_id: String, // 申请人工号或者学号
     app_name: String, // 申请人名称
     app_phone: String, // 申请人电话
+    app_type: String, // 活动类型
     app_post_type: String, // 宣传品类型
     applicant: String, // 申请单位
     app_start_time: Date, // 申请开始使用时间

@@ -48,56 +48,16 @@ router.get('/auditPostList', function (req, res, next) {
                 data: docs.reverse()
             });
         })
-    } else if (req.query.apartment === "后勤处") {
+    } else if (req.query.apartment === "宣传部") {
         PostStatus.find({
-            logistics_status: "0"
+            propagandaDepartment_status: "0"
         }).populate('app_id').exec(function (err, docs) {
             if (err) {
                 console.log(err);
                 return;
             }
-            docs.filter(item => {
-                if (item.department_status !== '0') {
-                    return false
-                }
-                return true
-
-            })
-            res.send({
-                code: 20000,
-                data: docs.reverse()
-            });
-        })
-    } else if (req.query.apartment === "教务处") {
-        PostStatus.find({
-            school_dean_status: "0"
-        }).populate('app_id').exec(function (err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            docs.filter(item => {
-                if (item.logistics_status !== '0') {
-                    return false
-                }
-                return true
-
-            })
-            res.send({
-                code: 20000,
-                data: docs.reverse()
-            });
-        })
-    } else if (req.query.apartment === "教育技术中心") {
-        PostStatus.find({
-            technology_center_status: "0"
-        }).populate('app_id').exec(function (err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            docs.filter(item => {
-                if (item.school_dean_status !== '0') {
+            docs = docs.filter(item => {
+                if (item.department_status !== '1') {
                     return false
                 }
                 return true
@@ -109,7 +69,6 @@ router.get('/auditPostList', function (req, res, next) {
             });
         })
     }
-
 });
 
 // 已审批列表
@@ -127,30 +86,8 @@ router.get('/auditedPostList', function (req, res, next) {
                 data: docs.reverse()
             });
         })
-    } else if (req.query.apartment === "后勤处") {
-        PostStatus.$where('this.logistics_status !== "0"').populate('app_id').exec(function (err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            res.send({
-                code: 20000,
-                data: docs.reverse()
-            });
-        })
-    } else if (req.query.apartment === "教务处") {
-        PostStatus.$where('this.school_dean_status !== "0"').populate('app_id').exec(function (err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            res.send({
-                code: 20000,
-                data: docs.reverse()
-            });
-        })
-    } else if (req.query.apartment === "教育技术中心") {
-        PostStatus.$where('this.technology_center_status !== "0"').populate('app_id').exec(function (err, docs) {
+    } else if (req.query.apartment === "宣传部") {
+        PostStatus.$where('this.propagandaDepartment_status !== "0"').populate('app_id').exec(function (err, docs) {
             if (err) {
                 console.log(err);
                 return;
@@ -161,15 +98,13 @@ router.get('/auditedPostList', function (req, res, next) {
             });
         })
     }
-
 });
 
 //  增加申请
 router.post('/addPost', function (req, res, next) {
-    console.log(req.query);
+    // console.log(req.query);
     var isConflict = false;
     PostApplication.find({
-        "c_id": req.query.c_id,
         "app_end_time": {
             "$gt": new Date()
         }
@@ -179,6 +114,7 @@ router.post('/addPost', function (req, res, next) {
         }
         docs.forEach(item => {
             if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
+                console.log(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time));
                 console.log("不冲突!");
             } else {
                 isConflict = true
@@ -241,7 +177,7 @@ router.post('/deletePostApply', function (req, res, next) {
             if (err) {
                 return console.log('删除数据失败')
             }
-            console.log(docs);
+            // console.log(docs);
         }
     )
     PostStatus.deleteOne({
@@ -252,7 +188,7 @@ router.post('/deletePostApply', function (req, res, next) {
             if (err) {
                 return console.log('删除数据失败')
             }
-            console.log(docs);
+            // console.log(docs);
         }
     )
     res.send({
@@ -263,13 +199,14 @@ router.post('/deletePostApply', function (req, res, next) {
 
 // 审批通过
 router.post('/resolvePostApply', function (req, res, next) {
-    // 部门审批 教务处审批 后勤处审批 教育技术中心审批
+    // 部门审批 宣传部审批
     if (req.query.apartment === '部门') {
         PostApplication.updateOne({
             "_id": req.query._id
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
+            "status": 1
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -294,12 +231,13 @@ router.post('/resolvePostApply', function (req, res, next) {
             })
 
         })
-    } else if (req.query.apartment === "后勤处") {
+    } else if (req.query.apartment === "宣传部") {
         PostApplication.updateOne({
             "_id": req.query._id
         }, {
             "reason": req.query.reason,
             "app_passTime": req.query.app_passTime,
+            "status": 1
         }, (err, response) => {
             if (err) {
                 console.log(err);
@@ -308,69 +246,8 @@ router.post('/resolvePostApply', function (req, res, next) {
             PostStatus.updateOne({
                 "app_id": req.query._id
             }, {
-                "logistics_reason": req.query.reason,
-                "logistics_status": "1" // 审批通过是"1"
-            }, (err, response) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                res.send({
-                    code: 20000,
-                    data: {
-                        msg: '编辑修改成功!'
-                    }
-                })
-            })
-
-        })
-    } else if (req.query.apartment === "教务处") {
-        PostApplication.updateOne({
-            "_id": req.query._id
-        }, {
-            "reason": req.query.reason,
-            "app_passTime": req.query.app_passTime,
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            PostStatus.updateOne({
-                "app_id": req.query._id
-            }, {
-                "school_dean_reason": req.query.reason,
-                "school_dean_status": "1" // 审批通过是"1"
-            }, (err, response) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                res.send({
-                    code: 20000,
-                    data: {
-                        msg: '编辑修改成功!'
-                    }
-                })
-            })
-
-        })
-    } else if (req.query.apartment === "教育技术中心") {
-        PostApplication.updateOne({
-            "_id": req.query._id
-        }, {
-            "reason": req.query.reason,
-            "app_passTime": req.query.app_passTime,
-            "status": 1 // 只有最后个部门审批之后才会改application表的status状态
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            PostStatus.updateOne({
-                "app_id": req.query._id
-            }, {
-                "technology_center_reason": req.query.reason,
-                "technology_center_status": "1" // 审批通过是"1"
+                "propagandaDepartment_reason": req.query.reason,
+                "propagandaDepartment_status": "1" // 审批通过是"1"
             }, (err, response) => {
                 if (err) {
                     console.log(err);
@@ -386,7 +263,6 @@ router.post('/resolvePostApply', function (req, res, next) {
 
         })
     }
-
 })
 
 // 审批驳回
@@ -423,7 +299,7 @@ router.post('/rejectPostApply', function (req, res, next) {
             })
 
         })
-    } else if (req.query.apartment === "后勤处") {
+    } else if (req.query.apartment === "宣传部") {
         PostApplication.updateOne({
             "_id": req.query._id
         }, {
@@ -438,70 +314,8 @@ router.post('/rejectPostApply', function (req, res, next) {
             PostStatus.updateOne({
                 "app_id": req.query._id
             }, {
-                "logistics_reason": req.query.reason,
-                "logistics_status": "2" // 审批通过是"1"
-            }, (err, response) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                res.send({
-                    code: 20000,
-                    data: {
-                        msg: '编辑修改成功!'
-                    }
-                })
-            })
-
-        })
-    } else if (req.query.apartment === "教务处") {
-        PostApplication.updateOne({
-            "_id": req.query._id
-        }, {
-            "reason": req.query.reason,
-            "app_passTime": req.query.app_passTime,
-            "status": 2
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            PostStatus.updateOne({
-                "app_id": req.query._id
-            }, {
-                "school_dean_reason": req.query.reason,
-                "school_dean_status": "2" // 审批通过是"1"
-            }, (err, response) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                res.send({
-                    code: 20000,
-                    data: {
-                        msg: '编辑修改成功!'
-                    }
-                })
-            })
-
-        })
-    } else if (req.query.apartment === "教育技术中心") {
-        PostApplication.updateOne({
-            "_id": req.query._id
-        }, {
-            "reason": req.query.reason,
-            "app_passTime": req.query.app_passTime,
-            "status": 2
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            PostStatus.updateOne({
-                "app_id": req.query._id
-            }, {
-                "technology_center_reason": req.query.reason,
-                "technology_center_status": "2" // 审批驳回是"2"
+                "propagandaDepartment_reason": req.query.reason,
+                "propagandaDepartment_status": "2" // 审批通过是"1"
             }, (err, response) => {
                 if (err) {
                     console.log(err);
@@ -554,48 +368,12 @@ router.post('/withdrawPostApply', function (req, res, next) {
                 }
             })
         })
-    } else if (req.query.apartment === "后勤处") {
+    } else if (req.query.apartment === "宣传部") {
         PostStatus.updateOne({
             "app_id": req.query._id
         }, {
-            "logistics_reason": "",
-            "logistics_status": "0"
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            res.send({
-                code: 20000,
-                data: {
-                    msg: '撤回成功!'
-                }
-            })
-        })
-    } else if (req.query.apartment === "教务处") {
-        PostStatus.updateOne({
-            "app_id": req.query._id
-        }, {
-            "school_dean_reason": "",
-            "school_dean_status": "0"
-        }, (err, response) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            res.send({
-                code: 20000,
-                data: {
-                    msg: '撤回成功!'
-                }
-            })
-        })
-    } else if (req.query.apartment === "教育技术中心") {
-        PostStatus.updateOne({
-            "app_id": req.query._id
-        }, {
-            "technology_center_reason": "",
-            "technology_center_status": "0"
+            "propagandaDepartment_reason": "",
+            "propagandaDepartment_status": "0"
         }, (err, response) => {
             if (err) {
                 console.log(err);

@@ -69,8 +69,8 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
-            docs.filter(item => {
-                if (item.department_status !== '0') {
+            docs = docs.filter(item => {
+                if (item.department_status !== '1') {
                     return false
                 }
                 return true
@@ -89,8 +89,8 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
-            docs.filter(item => {
-                if (item.logistics_status !== '0') {
+            docs = docs.filter(item => {
+                if (item.logistics_status !== '1') {
                     return false
                 }
                 return true
@@ -109,8 +109,8 @@ router.get('/auditList', function (req, res, next) {
                 console.log(err);
                 return;
             }
-            docs.filter(item => {
-                if (item.school_dean_status !== '0') {
+            docs = docs.filter(item => {
+                if (item.school_dean_status !== '1') {
                     return false
                 }
                 return true
@@ -120,6 +120,12 @@ router.get('/auditList', function (req, res, next) {
                 code: 20000,
                 data: docs.reverse()
             });
+        })
+    } else {
+        // 其它部门
+        res.send({
+            code: 20000,
+            data: []
         })
     }
 
@@ -222,6 +228,12 @@ router.get('/auditedList', function (req, res, next) {
                 code: 20000,
                 data: docs.reverse()
             });
+        })
+    } else {
+        // 其它部门
+        res.send({
+            code: 20000,
+            data: []
         })
     }
 
