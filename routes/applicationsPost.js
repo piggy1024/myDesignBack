@@ -166,6 +166,64 @@ router.post('/addPost', function (req, res, next) {
     }
 })
 
+//  修改申请
+router.post('/editPost', function (req, res, next) {
+    var isConflict = false;
+    PostApplication.find({
+        "app_post_type": req.query.app_post_type,
+        "app_end_time": {
+            "$gt": new Date() // 只查询今天之后的申请是否存在冲突
+        }
+    }, (err, docs) => {
+        if (err) {
+            console.log(err);
+        }
+        // 过滤其自身
+        docs = docs.filter(item => {
+            return item._id + '' !== req.query._id // + ''是将_id转化称字符串  数据库中的_id不是字符串
+        })
+        docs.forEach(item => {
+            if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
+                console.log("不冲突!");
+            } else {
+                isConflict = true
+                console.log("冲突!");
+            }
+
+        })
+        if (isConflict) {
+            // 如果冲突
+            res.send({
+                code: 10000,
+                message: '时间冲突修改失败!'
+            })
+        } else {
+            // 如果不冲突
+            PostApplication.findByIdAndUpdate(req.query._id, req.query, (err, docs) => {
+                if (err) {
+                    console.log(err);
+                }
+            })
+            res.send({
+                code: 20000,
+                msg: '修改成功!'
+            })
+        }
+    })
+    // 判断两个时间段是否冲突的js方法
+    function validTime(a, b, x, y) {
+        if (y <= a || b <= x) {
+            // console.log("true不");
+            // 不冲突返回true
+            return true
+        } else {
+            // console.log("false冲突");
+            // 冲突返回false
+            return false
+        }
+    }
+})
+
 // 取消申请
 router.post('/deletePostApply', function (req, res, next) {
     // 取消一个申请要分别删除申请表和状态表的文档

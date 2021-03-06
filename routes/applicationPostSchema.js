@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-
+mongoose.set('useFindAndModify', false)
 // 建立数据库连接
 mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
     useNewUrlParser: true,
