@@ -60,4 +60,18 @@ router.get('/list', function (req, res, next) {
     })
 
 });
+
+router.get('/detailClassroom', function (req, res, next) {
+    Classroom.findById(req.query.c_id, (err, doc) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+
+        res.send({
+            code: 20000,
+            data: doc
+        });
+    })
+})
 module.exports = router;
