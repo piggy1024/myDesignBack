@@ -18,7 +18,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/login', function (req, res, next) {
-
+  console.log(req.body.identity);
   // console.log(req.body);{ username: 'admin', password: '123456', identity: 'admin' }
 
   // 保存用户的id
@@ -97,6 +97,34 @@ router.post('/login', function (req, res, next) {
     // res.send(content);
   } else if (req.body.identity == 'superAdmin') {
     identity = ['superAdmin']
+    // 利用req.body的内容查到对应的帐号的身份  决定返回不同的token
+    Admin.find({
+      'admin_number': req.body.username
+    }, (err, docs) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      // 判断输入密码是否正确
+      let content = {
+        code: 20000,
+        data: {
+          token: 'admin-token'
+        }
+      }
+      // 如果密码不对则改变返回的code
+      if (req.body.password !== docs[0].admin_password) {
+        content.code = 10000
+        content.message = '密码错误!'
+      }
+
+      // 保存管理者名称
+      name = docs[0].admin_name
+      // 保存管理者部门
+      apartment = docs[0].apartment
+
+      res.send(content);
+    })
   }
 
 });
