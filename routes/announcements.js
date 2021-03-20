@@ -51,7 +51,7 @@ router.get('/list', function (req, res, next) {
         }
         res.send({
             code: 20000,
-            data: doc
+            data: doc.reverse()
         });
     })
 
@@ -68,7 +68,7 @@ router.post('/findAnnouncement', function (req, res, next) {
         }
         res.send({
             code: 20000,
-            data: docs
+            data: docs.reverse()
         })
     })
 
