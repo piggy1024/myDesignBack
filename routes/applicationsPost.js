@@ -114,7 +114,6 @@ router.post('/addPost', function (req, res, next) {
         }
         docs.forEach(item => {
             if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
-                console.log(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time));
                 console.log("不冲突!");
             } else {
                 isConflict = true
