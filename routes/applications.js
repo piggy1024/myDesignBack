@@ -240,60 +240,158 @@ router.get('/auditedList', function (req, res, next) {
 });
 
 //  增加申请
-router.post('/add', function (req, res, next) {
+router.post('/add', async function (req, res, next) {
     console.log(req.query);
     var isConflict = false;
-    Application.find({
-        "c_id": req.query.c_id,
-        "app_end_time": {
-            "$gt": new Date()
-        }
-    }, (err, docs) => {
-        if (err) {
-            console.log(err);
-        }
-        console.log(docs);
-        docs.forEach(item => {
-            if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
-                console.log("不冲突!");
-            } else {
-                isConflict = true
-                console.log("冲突!");
-            }
-
-        })
-        if (isConflict) {
-            // 如果冲突
-            res.send({
-                code: 10000,
-                message: '时间冲突添加失败!'
-            })
-        } else {
-            // 如果不冲突
-            Application.create(req.query, (err, docs) => {
-                if (err) {
-                    console.log(err);
-                }
-                // 增加一个申请上来 要对应增加该申请的各部门审批状态（各部门状态是独立的collection）
-                Status.create({
-                    app_id: docs._id,
-                    department_reason: '',
-                    logistics_reason: '',
-                    school_dean_reason: '',
-                    technology_center_reason: '',
-                    stu_status_id: req.query.stu_id
-                }, (err, docs) => {
+    var conflictCount = 0;
+    var notConflictCount = 0;
+    let delayWithPromise = () => {
+        return new Promise((resolve, reject) => {
+            req.query.addList.forEach((item, index) => {
+                isConflict = false
+                Application.find({
+                    "c_id": item,
+                    "app_end_time": {
+                        "$gt": new Date()
+                    }
+                }, async (err, docs) => {
                     if (err) {
                         console.log(err);
                     }
+                    // console.log('变化前isConflict-', isConflict);
+                    if (isConflict) {
+                        // 判断每个申请前先将isConflict 置为 false
+                        isConflict = false
+                    }
+                    // console.log('docs-----', docs);
+                    docs.forEach(item => {
+                        if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
+                            console.log("不冲突!");
+                        } else {
+                            isConflict = true
+                            console.log("冲突!");
+                        }
+
+                    })
+                    if (isConflict) {
+                        // 如果冲突
+                        // res.send({
+                        //     code: 10000,
+                        //     message: '时间冲突添加失败!'
+                        // })
+                        // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!冲突');
+                        // 冲突一个 conflictCount+1
+                        conflictCount = conflictCount + 1;
+                    } else {
+                        notConflictCount = notConflictCount + 1;
+                        // 如果不冲突
+                        req.query.c_id = item
+                        Application.create(req.query, (err, docs) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            // 增加一个申请上来 要对应增加该申请的各部门审批状态（各部门状态是独立的collection）
+                            Status.create({
+                                app_id: docs._id,
+                                department_reason: '',
+                                logistics_reason: '',
+                                school_dean_reason: '',
+                                technology_center_reason: '',
+                                stu_status_id: req.query.stu_id
+                            }, (err, docs) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            })
+                        })
+                        // res.send({
+                        //     code: 20000,
+                        //     msg: '添加成功!'
+                        // })
+                    }
+                    if (index + 1 === req.query.addList.length) {
+                        // console.log('++++length', req.query.addList.length);
+                        resolve()
+                    }
                 })
+
             })
-            res.send({
-                code: 20000,
-                msg: '添加成功!'
-            })
-        }
-    })
+
+        })
+    }
+    let func2 = () => {
+        delayWithPromise().then(res1 => {
+            console.log('111111--------', conflictCount);
+            console.log('222--------', notConflictCount);
+            if (conflictCount) {
+                // 如果冲突
+                res.send({
+                    code: 10000,
+                    message: `${conflictCount}个申请失败!${notConflictCount}个申请成功!`
+                })
+            } else {
+                res.send({
+                    code: 20000,
+                    msg: '添加成功!'
+                })
+            }
+        })
+    }
+    func2()
+
+
+
+    // Application.find({
+    //     "c_id": req.query.c_id,
+    //     "app_end_time": {
+    //         "$gt": new Date()
+    //     }
+    // }, (err, docs) => {
+    //     if (err) {
+    //         console.log(err);
+    //     }
+    //     console.log(docs);
+    //     docs.forEach(item => {
+    //         if (validTime(item.app_start_time, item.app_end_time, new Date(req.query.app_start_time), new Date(req.query.app_end_time))) {
+    //             console.log("不冲突!");
+    //         } else {
+    //             isConflict = true
+    //             console.log("冲突!");
+    //         }
+
+    //     })
+    //     if (isConflict) {
+    //         // 如果冲突
+    //         res.send({
+    //             code: 10000,
+    //             message: '时间冲突添加失败!'
+    //         })
+    //     } else {
+    //         // 如果不冲突
+    //         Application.create(req.query, (err, docs) => {
+    //             if (err) {
+    //                 console.log(err);
+    //             }
+    //             // 增加一个申请上来 要对应增加该申请的各部门审批状态（各部门状态是独立的collection）
+    //             Status.create({
+    //                 app_id: docs._id,
+    //                 department_reason: '',
+    //                 logistics_reason: '',
+    //                 school_dean_reason: '',
+    //                 technology_center_reason: '',
+    //                 stu_status_id: req.query.stu_id
+    //             }, (err, docs) => {
+    //                 if (err) {
+    //                     console.log(err);
+    //                 }
+    //             })
+    //         })
+    //         res.send({
+    //             code: 20000,
+    //             msg: '添加成功!'
+    //         })
+    //     }
+    // })
     // 判断两个时间段是否冲突的js方法
     function validTime(a, b, x, y) {
         if (y <= a || b <= x) {
