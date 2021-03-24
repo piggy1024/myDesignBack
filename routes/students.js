@@ -1,37 +1,6 @@
 var express = require('express');
-var mongoose = require('mongoose');
 var router = express.Router();
 var Student = require('./studentsSchema');
-
-// 建立数据库连接
-// mongoose.connect('mongodb://127.0.0.1:27017/applySystem', {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true
-// }, (err) => {
-//     if (err) {
-//         console.log(err);
-//         return;
-//     }
-//     console.log("数据库连接成功");
-
-// });
-
-// //  定义一个schema  对象的字段应该与数据库表一一对应
-// var StudentsSchema = mongoose.Schema({
-//     stu_academy: String,
-//     stu_email: String,
-//     stu_name: String,
-//     stu_number: String,
-//     stu_phone: String,
-//     stu_sex: String,
-//     stu_password: {
-//         type: String,
-//         default: '123456'
-//     }
-// })
-
-// // 定义数据库模型 来操作数据库
-// var Student = mongoose.model('Student', StudentsSchema);
 
 
 router.get('/', function (req, res, next) {
@@ -53,6 +22,23 @@ router.get('/list', function (req, res, next) {
     })
 
 });
+
+// 用stu_number查找学生信息
+router.post('/getStudentInfo', function (req, res, next) {
+    Student.find({
+        'stu_number': req.query.id
+    }, (err, docs) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        res.send({
+            code: 20000,
+            data: docs[0]
+        })
+    })
+
+})
 
 // 查找账号
 router.post('/findAccount', function (req, res, next) {
