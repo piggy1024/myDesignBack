@@ -3,6 +3,12 @@ var router = express.Router();
 var ejs = require('ejs');
 var Status = require('./applicationStatusSchema');
 var Application = require('./applicationSchema');
+// 用户总申请数
+var userApplyCount = 0;
+// 用户当前生效申请个数
+var userActiveCount = 0;
+// 用户处于申请状态的个数
+var userApplyingCount = 0;
 
 router.get('/', function (req, res, next) {
     ejs.renderFile('../views/index.ejs', {}, (err, data) => {
@@ -10,6 +16,45 @@ router.get('/', function (req, res, next) {
             'Content-Type': 'text/html;charset="utf-8'
         });
         res.end(data)
+    })
+});
+
+// 查询用户申请相关数据
+router.get('/userApplyData', function (req, res, next) {
+    userApplyingCount = 0
+    userActiveCount = 0
+    userApplyCount = 0
+    //子表关联主表查询，populate里面为子表外键
+    Status.find({
+        stu_status_id: req.query.user_id
+        // stu_status_id: "17251106123"
+    }).populate('app_id').exec(function (err, docs) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        // console.log(docs);
+        docs.forEach(item => {
+            if (item.app_id.status === 0) {
+                userApplyingCount++
+            }
+            if (item.technology_center_status === '1') {
+                if (item.app_id.app_end_time < new Date()) {
+                    // console.log('item.app_id.app_end_time:', item.app_id.app_end_time);
+                    // console.log('new Date():', new Date());
+                    userActiveCount++
+                }
+            }
+        })
+        userApplyCount = docs.length
+        res.send({
+            code: 20000,
+            data: {
+                userActiveCount: userActiveCount,
+                userApplyingCount: userApplyingCount,
+                userApplyCount: userApplyCount
+            }
+        });
     })
 });
 
