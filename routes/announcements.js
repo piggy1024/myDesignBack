@@ -37,6 +37,25 @@ var Announcement = mongoose.model('Announcement', AnnouncementSchema);
 router.get('/', function (req, res, next) {
     res.send('respond with a resource! Announcement');
 });
+
+// 获取最新公告
+router.get('/newAnnouncement', function (req, res, next) {
+    Announcement.find({}, async (err, doc) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        res.send({
+            code: 20000,
+            data: doc[0]
+        });
+    }).sort({
+        // 利用ObjectId是有带时间性质的去排序然后拿到第一条
+        _id: -1
+    }).limit(1)
+});
+
+
 // 公告列表
 router.get('/list', function (req, res, next) {
     let searchForm = {}
@@ -54,7 +73,6 @@ router.get('/list', function (req, res, next) {
             data: doc.reverse()
         });
     })
-
 });
 
 // 查找公告
