@@ -71,6 +71,23 @@ router.post('/findAccount', function (req, res, next) {
 
 })
 
+// 用账号查找账号信息
+router.post('/findByAccount', function (req, res, next) {
+    Admin.find({
+        'admin_number': req.query.admin_number
+    }, (err, docs) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        res.send({
+            code: 20000,
+            data: docs[0]
+        })
+    })
+
+})
+
 // 增加账号 或者 编辑账号
 router.post('/addAccount', function (req, res, next) {
     // req.query 请求传过的对象
