@@ -61,6 +61,58 @@ router.get('/list', function (req, res, next) {
 
 });
 
+// 增加教室 或者 编辑教室
+router.post('/addClassroom', function (req, res, next) {
+    // req.query 请求传过的对象
+
+    // 若传过的id为空,则新增
+    if (!req.query.c_id) {
+        // 删掉属性_id才能新增成功
+        delete req.query.c_id
+        Classroom.create(req.query, err => {
+            console.log(err);
+        })
+        res.send({
+            code: 20000,
+            msg: '新增成功!'
+        })
+    } else {
+        // 带id过来就修改
+        Classroom.updateOne({
+            '_id': req.query.c_id
+        }, req.query, (err, response) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            res.send({
+                code: 20000,
+                data: {
+                    msg: '编辑修改成功!'
+                }
+            })
+        })
+    }
+})
+
+// 删除教室
+router.post('/deleteClassroom', function (req, res, next) {
+    // 操作数据库删除操作
+    Classroom.deleteOne({
+            '_id': req.query.id
+        }, //查找条件
+        /*回调函数*/
+        (err, docs) => {
+            if (err) {
+                return console.log('删除数据失败')
+            }
+            console.log(docs);
+        })
+    res.send({
+        code: 20000,
+        msg: '删除成功!'
+    })
+})
 router.get('/detailClassroom', function (req, res, next) {
     Classroom.findById(req.query.c_id, (err, doc) => {
         if (err) {
